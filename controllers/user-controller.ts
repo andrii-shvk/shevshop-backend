@@ -108,6 +108,19 @@ class UserController {
             next(e);
         }
     }
+
+    async getManClothing(
+        req: Request,
+        res: Response,
+        next: NextFunction
+    ): Promise<void> {
+        try {
+            const users = await userService.getAllUsers();
+            res.json(users);
+        } catch (e) {
+            next(e);
+        }
+    }
 }
 
 export default UserController;

@@ -11,13 +11,18 @@ dotenv.config();
 const app: Application = express();
 const PORT = process.env.PORT || 5000;
 const dbUrl = process.env.DB_URL;
+
 app.use(express.json());
 app.use(cookieParser());
 app.use(cors({
     credentials: true,
     origin: process.env.CLIENT_URL
 }));
+
 app.use("/api", router);
+app.use("/", (req, res) => {
+    res.send("BACKEND")
+});
 app.use(errorMiddleware);
 
 const start = async () => {

@@ -1,0 +1,46 @@
+name: Deploy to AWS
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Checkout the code
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      # Configure AWS CLI
+      - name: Configure AWS CLI
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_REGION: ${{ secrets.AWS_REGION }}
+        run: |
+          aws configure set aws_access_key_id $AWS_ACCESS_KEY_ID
+          aws configure set aws_secret_access_key $AWS_SECRET_ACCESS_KEY
+          aws configure set region $AWS_REGION
+
+      # Log in to Amazon ECR
+      - name: Log in to Amazon ECR
+        run: |
+          aws ecr get-login-password --region ${{ secrets.AWS_REGION }} | docker login --username AWS --password-stdin ${{ secrets.ECR_REPOSITORY_URI }}
+
+      # Download certs
+      - name: Download certs
+        run: |
+          mkdir -p certs
+          echo "${{ secrets.CERT_FILE }}" > certs/us-east-1-bundle.pem
+
+      # Build and push Docker image
+      - name: Build and push Docker image
+        env:
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          docker build -t portfolio:${IMAGE_TAG} .
+          docker tag portfolio:${IMAGE_TAG} ${{ secrets.ECR_REPOSITORY_URI }}:${IMAGE_TAG}
+          docker push ${{ secrets.ECR_REPOSITORY_URI }}:${IMAGE_TAG}
