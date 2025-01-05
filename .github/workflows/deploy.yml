@@ -41,6 +41,50 @@ jobs:
         env:
           IMAGE_TAG: ${{ github.sha }}
         run: |
-          docker build -t portfolio:${IMAGE_TAG} .
-          docker tag portfolio:${IMAGE_TAG} ${{ secrets.ECR_REPOSITORY_URI }}:${IMAGE_TAG}
+          docker build -t shevshop:${IMAGE_TAG} .
+          docker tag shevshop:${IMAGE_TAG} ${{ secrets.ECR_REPOSITORY_URI }}:${IMAGE_TAG}
           docker push ${{ secrets.ECR_REPOSITORY_URI }}:${IMAGE_TAG}
+
+    # Register ECS Task Definition (update with new image and taskRoleArn)
+      - name: Register ECS Task Definition
+        env:
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          aws ecs register-task-definition \
+            --family shevshop-backend-task \
+            --network-mode awsvpc \
+            --container-definitions "[{
+              \"name\": \"shevshop\",
+              \"image\": \"${{ secrets.ECR_REPOSITORY_URI }}:${IMAGE_TAG}\",
+              \"memory\": 2048,
+              \"cpu\": 1024,
+              \"portMappings\": [
+                {\"containerPort\": 5000, \"protocol\": \"tcp\"}
+              ],
+              \"environment\": [
+                {\"name\": \"JWT_ACCESS_SECRET\", \"value\": \"${{ secrets.JWT_ACCESS_SECRET }}\"},
+                {\"name\": \"JWT_REFRESH_SECRET\", \"value\": \"${{ secrets.JWT_REFRESH_SECRET }}\"},
+                {\"name\": \"API_URL\", \"value\": \"${{ secrets.API_URL }}\"},
+                {\"name\": \"SMTP_PORT\", \"value\": \"${{ secrets.SMTP_PORT }}\"},
+                {\"name\": \"PORT\", \"value\": \"${{ secrets.PORT }}\"}
+                {\"name\": \"AWS_ACCESS_KEY_ID\", \"value\": \"${{ secrets.AWS_ACCESS_KEY_ID }}\"}
+                {\"name\": \"AWS_SECRET_ACCESS_KEY\", \"value\": \"${{ secrets.AWS_SECRET_ACCESS_KEY }}\"}
+                {\"name\": \"SMTP_HOST\", \"value\": \"${{ secrets.SMTP_HOST }}\"}
+                {\"name\": \"CLIENT_URL\", \"value\": \"${{ secrets.CLIENT_URL }}\"}
+                {\"name\": \"SMTP_PASSWORD\", \"value\": \"${{ secrets.SMTP_PASSWORD }}\"}
+                {\"name\": \"SMTP_USER\", \"value\": \"${{ secrets.SMTP_USER }}\"}
+              ]
+            }]" \
+            --task-role-arn ${{ secrets.ECS_TASK_ROLE_ARN }}
+
+      # Update ECS Service to use the new task definition revision
+      - name: Update ECS Service
+        run: |
+          TASK_REVISION=$(aws ecs describe-task-definition --task-definition shevshop-backend-task | jq -r '.taskDefinition.revision')
+          aws ecs update-service \
+            --cluster shevshop \
+            --service shevshop-service \
+            --load-balancers targetGroupArn=arn:aws:elasticloadbalancing:us-east-1:545009846171:targetgroup/ip-shevshop-tg/0ce5e117d11180a7,containerName=shevshop,containerPort=5000 \
+            --force-new-deployment \
+            --task-definition shevshop-backend-task:${TASK_REVISION} \
+            --network-configuration "awsvpcConfiguration={subnets=[\"subnet-08c5064f2c14d32c1\"],securityGroups=[\"sg-030ed303c397921db\"]}"
