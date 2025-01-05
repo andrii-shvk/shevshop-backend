@@ -87,4 +87,4 @@ jobs:
             --load-balancers targetGroupArn=arn:aws:elasticloadbalancing:us-east-1:545009846171:targetgroup/ip-shevshop-tg/0ce5e117d11180a7,containerName=shevshop,containerPort=5000 \
             --force-new-deployment \
             --task-definition shevshop-backend-task:${TASK_REVISION} \
-            --network-configuration "awsvpcConfiguration={subnets=[\"subnet-08c5064f2c14d32c1\"],securityGroups=[\"sg-030ed303c397921db\"]}"
+            --network-configuration "awsvpcConfiguration={subnets=[\"subnet-04b2816ff217a5957\"],securityGroups=[\"sg-030ed303c397921db\"]}"
