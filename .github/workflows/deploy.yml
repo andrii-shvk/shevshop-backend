@@ -66,12 +66,12 @@ jobs:
                 {\"name\": \"JWT_REFRESH_SECRET\", \"value\": \"${{ secrets.JWT_REFRESH_SECRET }}\"},
                 {\"name\": \"API_URL\", \"value\": \"${{ secrets.API_URL }}\"},
                 {\"name\": \"SMTP_PORT\", \"value\": \"${{ secrets.SMTP_PORT }}\"},
-                {\"name\": \"PORT\", \"value\": \"${{ secrets.PORT }}\"}
-                {\"name\": \"AWS_ACCESS_KEY_ID\", \"value\": \"${{ secrets.AWS_ACCESS_KEY_ID }}\"}
-                {\"name\": \"AWS_SECRET_ACCESS_KEY\", \"value\": \"${{ secrets.AWS_SECRET_ACCESS_KEY }}\"}
-                {\"name\": \"SMTP_HOST\", \"value\": \"${{ secrets.SMTP_HOST }}\"}
-                {\"name\": \"CLIENT_URL\", \"value\": \"${{ secrets.CLIENT_URL }}\"}
-                {\"name\": \"SMTP_PASSWORD\", \"value\": \"${{ secrets.SMTP_PASSWORD }}\"}
+                {\"name\": \"PORT\", \"value\": \"${{ secrets.PORT }}\"},
+                {\"name\": \"AWS_ACCESS_KEY_ID\", \"value\": \"${{ secrets.AWS_ACCESS_KEY_ID }}\"},
+                {\"name\": \"AWS_SECRET_ACCESS_KEY\", \"value\": \"${{ secrets.AWS_SECRET_ACCESS_KEY }}\"},
+                {\"name\": \"SMTP_HOST\", \"value\": \"${{ secrets.SMTP_HOST }}\"},
+                {\"name\": \"CLIENT_URL\", \"value\": \"${{ secrets.CLIENT_URL }}\"},
+                {\"name\": \"SMTP_PASSWORD\", \"value\": \"${{ secrets.SMTP_PASSWORD }}\"},
                 {\"name\": \"SMTP_USER\", \"value\": \"${{ secrets.SMTP_USER }}\"}
               ]
             }]" \
