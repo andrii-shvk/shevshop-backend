@@ -16,7 +16,10 @@ app.use(express.json());
 app.use(cookieParser());
 app.use(cors({
     credentials: true,
-    origin: process.env.CLIENT_URL
+    origin: function (origin, callback) {
+        callback(null, true);  // Разрешить все домены
+    }
+    // origin: process.env.CLIENT_URL
 }));
 
 app.use("/api", router);
