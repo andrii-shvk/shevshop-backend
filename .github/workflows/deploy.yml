@@ -48,6 +48,7 @@ jobs:
             --family shevshop-backend-task \
             --network-mode awsvpc \
             --requires-compatibilities EC2 \
+            --runtime-platform "cpuArchitecture=X86_64,operatingSystemFamily=LINUX" \
             --cpu "1024" \
             --memory "3072" \
             --task-role-arn ${{ secrets.ECS_TASK_ROLE_ARN }} \
