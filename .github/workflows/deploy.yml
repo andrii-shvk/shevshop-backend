@@ -56,7 +56,7 @@ jobs:
             --container-definitions "[{
               \"name\": \"shevshop\",
               \"image\": \"${{ secrets.ECR_REPOSITORY_URI }}:${IMAGE_TAG}\",
-              \"memory\": 2048,
+              \"memory\": 3072,
               \"cpu\": 1024,
               \"portMappings\": [
                 {\"containerPort\": 5000, \"protocol\": \"tcp\"}
