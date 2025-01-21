@@ -71,6 +71,7 @@ jobs:
                 {\"name\": \"AWS_SECRET_ACCESS_KEY\", \"value\": \"${{ secrets.AWS_SECRET_ACCESS_KEY }}\"},
                 {\"name\": \"SMTP_HOST\", \"value\": \"${{ secrets.SMTP_HOST }}\"},
                 {\"name\": \"CLIENT_URL\", \"value\": \"${{ secrets.CLIENT_URL }}\"},
+                {\"name\": \"DB_URL\", \"value\": \"${{ secrets.DB_URL }}\"},
                 {\"name\": \"SMTP_PASSWORD\", \"value\": \"${{ secrets.SMTP_PASSWORD }}\"},
                 {\"name\": \"SMTP_USER\", \"value\": \"${{ secrets.SMTP_USER }}\"}
               ]
