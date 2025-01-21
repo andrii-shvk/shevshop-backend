@@ -10,11 +10,9 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # Checkout the code
       - name: Checkout code
         uses: actions/checkout@v3
 
-      # Configure AWS CLI
       - name: Configure AWS CLI
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
@@ -25,18 +23,15 @@ jobs:
           aws configure set aws_secret_access_key $AWS_SECRET_ACCESS_KEY
           aws configure set region $AWS_REGION
 
-      # Log in to Amazon ECR
       - name: Log in to Amazon ECR
         run: |
           aws ecr get-login-password --region ${{ secrets.AWS_REGION }} | docker login --username AWS --password-stdin ${{ secrets.ECR_REPOSITORY_URI }}
 
-      # Download certs
       - name: Download certs
         run: |
           mkdir -p certs
           echo "${{ secrets.CERT_FILE }}" > certs/us-east-1-bundle.pem
 
-      # Build and push Docker image
       - name: Build and push Docker image
         env:
           IMAGE_TAG: ${{ github.sha }}
@@ -45,7 +40,6 @@ jobs:
           docker tag shevshop:${IMAGE_TAG} ${{ secrets.ECR_REPOSITORY_URI }}:${IMAGE_TAG}
           docker push ${{ secrets.ECR_REPOSITORY_URI }}:${IMAGE_TAG}
 
-    # Register ECS Task Definition (update with new image and taskRoleArn)
       - name: Register ECS Task Definition
         env:
           IMAGE_TAG: ${{ github.sha }}
@@ -53,14 +47,26 @@ jobs:
           aws ecs register-task-definition \
             --family shevshop-backend-task \
             --network-mode awsvpc \
+            --requires-compatibilities EC2 \
+            --cpu "1024" \
+            --memory "3072" \
+            --task-role-arn ${{ secrets.ECS_TASK_ROLE_ARN }} \
             --container-definitions "[{
               \"name\": \"shevshop\",
               \"image\": \"${{ secrets.ECR_REPOSITORY_URI }}:${IMAGE_TAG}\",
-              \"memory\": 3072,
               \"cpu\": 1024,
+              \"memory\": 3072,
+              \"memoryReservation\": 1536,
               \"portMappings\": [
-                {\"containerPort\": 5000, \"protocol\": \"tcp\"}
+                {
+                  \"name\": \"5000\",
+                  \"containerPort\": 5000,
+                  \"hostPort\": 5000,
+                  \"protocol\": \"tcp\",
+                  \"appProtocol\": \"http\"
+                }
               ],
+              \"essential\": true,
               \"environment\": [
                 {\"name\": \"JWT_ACCESS_SECRET\", \"value\": \"${{ secrets.JWT_ACCESS_SECRET }}\"},
                 {\"name\": \"JWT_REFRESH_SECRET\", \"value\": \"${{ secrets.JWT_REFRESH_SECRET }}\"},
@@ -75,17 +81,14 @@ jobs:
                 {\"name\": \"SMTP_PASSWORD\", \"value\": \"${{ secrets.SMTP_PASSWORD }}\"},
                 {\"name\": \"SMTP_USER\", \"value\": \"${{ secrets.SMTP_USER }}\"}
               ]
-            }]" \
-            --task-role-arn ${{ secrets.ECS_TASK_ROLE_ARN }}
+            }]" 
 
-      # Update ECS Service to use the new task definition revision
       - name: Update ECS Service
         run: |
           TASK_REVISION=$(aws ecs describe-task-definition --task-definition shevshop-backend-task | jq -r '.taskDefinition.revision')
           aws ecs update-service \
             --cluster shevshop \
             --service shevshop-service \
-            --load-balancers targetGroupArn=arn:aws:elasticloadbalancing:us-east-1:545009846171:targetgroup/ip-shevshop-tg/0ce5e117d11180a7,containerName=shevshop,containerPort=5000 \
             --force-new-deployment \
             --task-definition shevshop-backend-task:${TASK_REVISION} \
             --network-configuration "awsvpcConfiguration={subnets=[\"subnet-04b2816ff217a5957\"],securityGroups=[\"sg-030ed303c397921db\"]}"
